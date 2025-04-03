@@ -6,11 +6,12 @@
 # import
 import sys, os
 import gspread
+from googleapiclient.discovery import Resource
 from google.oauth2.service_account import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
-from typing import Dict, List
+from typing import Dict, List, Any
 import pandas as pd
 
 # flow
@@ -79,9 +80,28 @@ class Gmail:
         return token_path
 
     # ----------------------------------------------------------------------------------
-    # 対象のメールを検索して取得する（メールIDの取得）
 
-    def _get_search_mail(self, gmail_service, query: str):
+    def _get_search_mail(self, gmail_service: Resource, **query_params: Any):
+        """
+        対象のメールを検索して取得する（メールIDの取得）
+        :param gmail_service: Gmailのサービスオブジェクト
+        :param query_params: 検索条件
+            subject: 件名
+            from_email: 送信者
+            after: 取得するメールの最終日付
+            before: 取得するメールの最初日付
+            has_attachment: 添付ファイルがあるメールを取得するかどうか
+
+        :query_params渡し方例
+            query_params = {
+                'subject': '申込み',
+                'after': '2025/01/01',
+                'before': '2025/03/01'
+            }
+        """
+
+        self.logger.debug(f'query_params: {query_params}')
+        query = self._build_query(**query_params)
         mail_id_list = gmail_service.users().messages().list(userId='me', q=query).execute()
         self.logger.debug(f'results: {mail_id_list}')
         mail_list = mail_id_list.get('messages', [])
@@ -96,14 +116,23 @@ class Gmail:
             return mail_list
 
     # ----------------------------------------------------------------------------------
-    # クエリ例文
-    # subject:xxx	件名に xxx を含む
-    # from:xxx@gmail.com	差出人が xxx@gmail.com
-    # after:2024/12/01	2024年12月1日以降のメール
-    # before:2025/01/01	2025年1月1日より前のメール
-    # has:attachment	添付ファイルありのメールだけ取得
+    # クエリを作成する
 
-
+    def _build_query(self, subject: str=None, from_email: str=None, after: str=None, before: str=None, has_attachment: bool=False):
+        query_parts = []
+        if subject:
+            query_parts.append(f'subject:{subject}')  # 件名に xxx を含む
+        if from_email:
+            query_parts.append(f'from:{from_email}')  # 送信してきた相手
+        if after:
+            query_parts.append(f'after:{after}')  # 2024年12月1日以降のメール
+        if before:
+            query_parts.append(f'before:{before}')  # 2025年1月1日より前のメール
+        if has_attachment:
+            query_parts.append('has:attachment')  # 添付ファイルありのメールだけ取得
+        query = ' '.join(query_parts)
+        self.logger.debug(f'query: {query}')
+        return query
 
     # ----------------------------------------------------------------------------------
     # メールの中身をデバッグする
