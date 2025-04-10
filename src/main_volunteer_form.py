@@ -6,15 +6,15 @@
 # import
 
 # flow
-from method.flow import FlowProcess
+from method.gmail import Gmail
 
 
 # ----------------------------------------------------------------------------------
 # **********************************************************************************
 
 def main():
-    main_flow = FlowProcess()
-    main_flow.parallel_process()
+    gmail = Gmail()
+    gmail.()
 
 # **********************************************************************************
 

@@ -14,6 +14,9 @@ from google.auth.transport.requests import Request
 from typing import Dict, List, Any
 import pandas as pd
 
+# const
+from const_element import GmailInfo
+
 # flow
 from method.logger import Logger
 from method.image_meta_remove import ImageMetaRemove
@@ -39,16 +42,28 @@ class Gmail:
     #!##############################################################################
     #? 実行処理
 
-    def handle_submit(self):
-        pass
+    def process(self, **query_params: Any):
+        gmail_service = self._get_gmail_service(json_key_name=GmailInfo.gmail.value["JSON_KEY_NAME"])  # Gmailのサービスオブジェクトを取得
+
+        self._get_search_mail(gmail_service, **query_params )  # メールを検索して取得
+
+
+
+
+
+
+
+
+
+
 
     #!##############################################################################
     # Gmailの認証してサービスオブジェクトの作成
 
-    def creds(self, token_path: str, json_key_name: str):
+    def _get_gmail_service(self, json_key_name: str):
         SCOPES = ['https://www.googleapis.com/auth/gmail.modify']  # 送信+受信
         json_key_path = self.path._get_secret_key_path(file_name=json_key_name)  # jsonKeyNameのパスを取得
-        token_path = self._get_token_path(file_name=token_path)  # tokenのパスを取得
+        token_path = self._get_token_path()  # tokenのパスを取得
 
         creds = None
 
@@ -96,7 +111,7 @@ class Gmail:
         """
 
         self.logger.debug(f'query_params: {query_params}')
-        query = self._build_query(**query_params)
+        query = self._build_search_query(**query_params)
         mail_box = gmail_service.users().messages().list(userId='me', q=query).execute()
         mail_ids_list = mail_box.get('messages', [])
         if not mail_ids_list:
@@ -131,9 +146,9 @@ class Gmail:
             self.logger.error(f'メールの取得に失敗しました。: {e}')
 
     # ----------------------------------------------------------------------------------
-    # クエリを作成する
+    # 検索するためのクエリを作成する
 
-    def _build_query(self, subject: str=None, from_email: str=None, after: str=None, before: str=None, has_attachment: bool=False):
+    def _build_search_query(self, subject: str=None, from_email: str=None, after: str=None, before: str=None, has_attachment: bool=False):
         query_parts = []
         if subject:
             query_parts.append(f'subject:{subject}')  # 件名に xxx を含む
@@ -171,10 +186,56 @@ class Gmail:
             self.logger.error(f'メールの本文の取得に失敗しました。: {e}')
 
     # ----------------------------------------------------------------------------------
-    # メール件名からメールを取得する
+    # 本文から特定のワードを取得する
 
+    def _get_word_from_mail_body(self, mail_body: str, search_word_list: List[str]):
+        """
+        メールの本文から特定のワードを取得する
+        :param mail_body: メールの本文
+        :param word_list: 取得したいワードのリスト
+        :return: ワードの辞書
+        """
+        word_dict = {}
+        for word in search_word_list:
+            if word in mail_body:
+                start_index = mail_body.index(word) + len(word)
+                end_index = mail_body.index('\n', start_index)
+                word_dict[word] = mail_body[start_index:end_index].strip()
+            else:
+                self.logger.error(f'ワードが見つかりませんでした。: {word}')
+        return word_dict
 
-    # メール本文を取得
+    # ----------------------------------------------------------------------------------
 
 
     # メール本文から特定のワードの内容を取得する（辞書で返す）
+
+    def _get_parse_mail_body(self, mail_body: str, search_word_list: List[str]):
+        """
+        メールの本文から特定のワードを取得する
+        :param mail_body: メールの本文
+        :param search_word_list: 取得したいワードのリスト
+        :return: ワードの辞書
+        """
+
+        data = {}
+        for word in search_word_list:
+            self.logger.debug(f'word: {word}')
+
+            # wordがmail_bodyに含まれているか確認する
+            if word in mail_body:
+                # nextは最初の条件を満たす値を返す
+                # splitlines()は行ごとに分解する
+                # startswithは行の先頭に指定した文字列があるかを確認する
+                matched_line = next((row for row in mail_body.splitlines() if row.startswith(word)), '')
+
+                # .partition(':')はもし値が空白（None）であっても''を返す
+                _, _, value = matched_line.partition(':')
+                value = value.strip()
+                data[word] = value  # 辞書に追加
+                self.logger.debug(f'word: {word}, value: {value}')
+            else:
+                data[word] = ''  # エラーの際に空白を返す
+                self.logger.error(f'ワードが見つかりませんでした。: {word}')
+
+    # ----------------------------------------------------------------------------------

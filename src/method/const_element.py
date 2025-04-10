@@ -17,9 +17,18 @@ load_dotenv()
 # GSS情報
 
 
+class GmailInfo(Enum):
+
+    gmail = {
+        "JSON_KEY_NAME": "sns-auto-430920-08274ad68b41.json",
+    }
+# ----------------------------------------------------------------------------------
+# GSS情報
+
+
 class GssInfo(Enum):
 
-    CCX = {
+    gmail = {
         "JSON_KEY_NAME": "sns-auto-430920-08274ad68b41.json",
         "SHEET_URL": "https://docs.google.com/spreadsheets/d/1dghp-9A1vd9WZbybka-2MmrV2-rpm-7wwsI-tRp9jYM/edit?gid=675546558#gid=675546558",
         "WORKSHEET_NAME": "アカウント",
