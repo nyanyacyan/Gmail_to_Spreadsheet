@@ -95,19 +95,20 @@ class GmailWriteGss:
     # ----------------------------------------------------------------------------------
 
 
-    def _gss_row_write(self, gss_df: pd.DataFrame, col_name: str, none_row_num: int, gmail_body_data: Dict) -> None:
-        for i, row in  gss_df.iterrows():
+    def _gss_gmail_body_data_write(self, gss_df: pd.DataFrame, col_name: str, none_row_num: int, gmail_body_data: Dict) -> None:
+        for i, gmail_body_data in  gss_df.iterrows():
             row_num = i + none_row_num
             self.logger.debug(f'row_num: {row_num}')
 
+            self._write_exits_value(gmail_body_data=gmail_body_data)
+            self.logger.debug(f'row_num: {row_num} のデータをGSSに書き込みました。')
 
 
-            # 対象のセルアドレスに書込
 
     # ----------------------------------------------------------------------------------
     # body_data → 辞書データ → 存在確認 → 書き込む
 
-    def _write_exits_value(self, gmail_body_data: Dict, cell_address: str) -> None:
+    def _write_exits_value(self, gmail_body_data: Dict) -> None:
         furigana_data =  gmail_body_data[self.const_gss_info["GMAIL"]["FURIGANA"]]
         name_data =  gmail_body_data[self.const_gss_info["GMAIL"]["NAME"]]
         address_data =  gmail_body_data[self.const_gss_info["GMAIL"]["ADDRESS"]]
