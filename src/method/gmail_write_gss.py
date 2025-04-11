@@ -87,7 +87,7 @@ class GmailWriteGss:
             none_row_num = 1  # ヘッダー行を除いた次の行
         else:
             # 空白の行数
-            none_row_num = self.gss_df(df=gss_df)
+            none_row_num = self._get_input_row_num(gss_df=gss_df)
 
         self.logger.debug(f'none_row_num: {none_row_num}')
         return none_row_num
@@ -95,20 +95,18 @@ class GmailWriteGss:
     # ----------------------------------------------------------------------------------
 
 
-    def _gss_gmail_body_data_write(self, gss_df: pd.DataFrame, col_name: str, none_row_num: int, gmail_body_data: Dict) -> None:
-        for i, gmail_body_data in  gss_df.iterrows():
+    def _gss_gmail_body_data_write(self, body_data_list: List, none_row_num: int, gmail_body_data: Dict) -> None:
+        for i, gmail_body_data in body_data_list:
             row_num = i + none_row_num
             self.logger.debug(f'row_num: {row_num}')
 
-            self._write_exits_value(gmail_body_data=gmail_body_data)
+            self._write_exits_value(gmail_body_data=gmail_body_data, row_num=row_num)
             self.logger.debug(f'row_num: {row_num} のデータをGSSに書き込みました。')
-
-
 
     # ----------------------------------------------------------------------------------
     # body_data → 辞書データ → 存在確認 → 書き込む
 
-    def _write_exits_value(self, gmail_body_data: Dict) -> None:
+    def _write_exits_value(self, gmail_body_data: Dict, row_num) -> None:
         furigana_data =  gmail_body_data[self.const_gss_info["GMAIL"]["FURIGANA"]]
         name_data =  gmail_body_data[self.const_gss_info["GMAIL"]["NAME"]]
         address_data =  gmail_body_data[self.const_gss_info["GMAIL"]["ADDRESS"]]
@@ -132,7 +130,7 @@ class GmailWriteGss:
         # ふりがな書込
         if furigana_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=furigana_col_name, row_num=furigana_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=furigana_col_name, row_num=row_num)
             self.logger.debug(f'{furigana_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
@@ -143,7 +141,7 @@ class GmailWriteGss:
         # 氏名書込
         if name_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=name_col_name, row_num=name_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=name_col_name, row_num=row_num)
             self.logger.debug(f'{name_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
@@ -154,7 +152,7 @@ class GmailWriteGss:
         # 住所書込
         if address_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=address_col_name, row_num=address_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=address_col_name, row_num=row_num)
             self.logger.debug(f'{address_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
@@ -165,7 +163,7 @@ class GmailWriteGss:
         # 年齢書込
         if age_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=age_col_name, row_num=age_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=age_col_name, row_num=row_num)
             self.logger.debug(f'{age_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
@@ -176,7 +174,7 @@ class GmailWriteGss:
         # 電話番号書込
         if tel_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=tel_col_name, row_num=tel_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=tel_col_name, row_num=row_num)
             self.logger.debug(f'{tel_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
@@ -187,7 +185,7 @@ class GmailWriteGss:
         # メールアドレス書込
         if mail_address_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=mail_address_col_name, row_num=mail_address_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=mail_address_col_name, row_num=row_num)
             self.logger.debug(f'{mail_address_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
@@ -198,7 +196,7 @@ class GmailWriteGss:
         # 地域書込
         if region_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=region_col_name, row_num=region_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=region_col_name, row_num=row_num)
             self.logger.debug(f'{region_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
@@ -209,7 +207,7 @@ class GmailWriteGss:
         # 活動内容書込
         if action_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=action_col_name, row_num=action_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=action_col_name, row_num=row_num)
             self.logger.debug(f'{action_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
@@ -220,7 +218,7 @@ class GmailWriteGss:
         # 自由記入書込
         if free_write_data:
             # セルのアドレスを取得
-            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=free_write_col_name, row_num=free_write_data)
+            cell_address = self.select_cell.get_cell_address(gss_row_dict=gmail_body_data, col_name=free_write_col_name, row_num=row_num)
             self.logger.debug(f'{free_write_col_name} の cell_address: {cell_address}')
 
             # セルのアドレスに書込
