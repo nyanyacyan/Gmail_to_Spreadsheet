@@ -15,7 +15,7 @@ from typing import Dict, List, Any
 import pandas as pd
 
 # const
-from const_element import GmailInfo
+from const_element import GmailInfo, GmailSearchQueryParams, GmailBodySearchList
 
 # flow
 from method.logger import Logger
@@ -40,22 +40,42 @@ class Gmail:
 
 
     #!##############################################################################
-    #? 実行処理
+    #? 指定の件名のGmailを取得して、本文から特定のワードを取得する
+    #? 取得したワードはリスト型で返す
 
-    def process(self, **query_params: Any):
+    def process(self):
         gmail_service = self._get_gmail_service(json_key_name=GmailInfo.gmail.value["JSON_KEY_NAME"])  # Gmailのサービスオブジェクトを取得
 
-        self._get_search_mail(gmail_service, **query_params )  # メールを検索して取得
+        # 検索する件名ワード
+        query_params = GmailSearchQueryParams.GMAIL.value["QUERY_PARAMS_DICT"]
 
+        # 対象のメールを検索して取得
+        mail_id_list = self._get_search_mail(gmail_service, **query_params)  # メールを検索して取得
 
+        body_data_list = []  # メールの本文を格納するリスト
+        if mail_id_list:
+            for mail_id in mail_id_list:
+                self.logger.debug(f'mail_id: {mail_id}')
+                mail_contents = self._get_mail_contents(gmail_service, mail_id)
+                self.logger.debug(f'mail_contents: {mail_contents}')
 
+                # mail_contentsからメールの本文を取得する
+                mail_body = self._get_mail_body(mail_contents)
+                self.logger.debug(f'mail_body: {mail_body}')
 
+                search_word_list = GmailBodySearchList.search_word_list_first.value  # 検索するワードリスト
+                self.logger.debug(f'search_word_list: {search_word_list}')
 
+                # mail_bodyから特定のワードを取得する
+                body_data_dict = self._get_parse_mail_body(mail_body, search_word_list)
+                body_data_list.append(body_data_dict)  # リストに追加
 
+        else:
+            self.logger.error('対象のメールはありませんでした。')
+            return []
 
-
-
-
+        self.logger.debug(f'body_data_list: {body_data_list}')
+        return body_data_list  # メールの本文を格納したリストを返す
 
     #!##############################################################################
     # Gmailの認証してサービスオブジェクトの作成
@@ -206,8 +226,6 @@ class Gmail:
         return word_dict
 
     # ----------------------------------------------------------------------------------
-
-
     # メール本文から特定のワードの内容を取得する（辞書で返す）
 
     def _get_parse_mail_body(self, mail_body: str, search_word_list: List[str]):
@@ -218,7 +236,7 @@ class Gmail:
         :return: ワードの辞書
         """
 
-        data = {}
+        data_dict = {}
         for word in search_word_list:
             self.logger.debug(f'word: {word}')
 
@@ -230,12 +248,16 @@ class Gmail:
                 matched_line = next((row for row in mail_body.splitlines() if row.startswith(word)), '')
 
                 # .partition(':')はもし値が空白（None）であっても''を返す
+                # partition(':')は3つに分ける → word, ':', value
                 _, _, value = matched_line.partition(':')
                 value = value.strip()
-                data[word] = value  # 辞書に追加
+                data_dict[word] = value  # 辞書に追加
                 self.logger.debug(f'word: {word}, value: {value}')
             else:
-                data[word] = ''  # エラーの際に空白を返す
+                data_dict[word] = ''  # エラーの際に空白を返す
                 self.logger.error(f'ワードが見つかりませんでした。: {word}')
+
+        self.logger.debug(f'data_dict: {data_dict}')
+        return data_dict
 
     # ----------------------------------------------------------------------------------

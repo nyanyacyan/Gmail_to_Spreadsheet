@@ -19,38 +19,65 @@ load_dotenv()
 
 class GmailInfo(Enum):
 
-    gmail = {
+    GMAIL = {
         "JSON_KEY_NAME": "sns-auto-430920-08274ad68b41.json",
     }
+
+# ----------------------------------------------------------------------------------
+
+class GmailSearchQueryParams(Enum):
+
+    QUERY_PARAMS_DICT = {
+        # 検索条件
+        # 検索条件に入れない場合には「 "" 」で問題なし
+        "subject": "ボランティア応募フォーム",
+        "from_email": "",
+        "after": "",
+        "before": "",
+        "has_attachment": False,
+    }
+
+# ----------------------------------------------------------------------------------
+
+class GmailBodySearchList(Enum):
+
+    search_word_list_first = [
+        '氏名（フリガナ）',
+        '氏名',
+        '住所',
+        '年齢',
+        '電話番号',
+        'Eメール',
+        '活動できる地域',
+        '活動できる期間',
+        '活動できる内容',
+        '自由記入欄',
+    ]
+
 # ----------------------------------------------------------------------------------
 # GSS情報
 
 
 class GssInfo(Enum):
 
-    gmail = {
+    GMAIL = {
         "JSON_KEY_NAME": "sns-auto-430920-08274ad68b41.json",
         "SHEET_URL": "https://docs.google.com/spreadsheets/d/1dghp-9A1vd9WZbybka-2MmrV2-rpm-7wwsI-tRp9jYM/edit?gid=675546558#gid=675546558",
         "WORKSHEET_NAME": "アカウント",
 
         # column名
-        "URL": "URL",
-        "CHECK": "チェック",
-        "NAME": "ユーザー名",
-        "ID": "ID",
-        "PASSWORD": "Password",
+        "FURIGANA": "氏名（フリガナ）",
+        "NAME": "氏名",
+        "ADDRESS": "住所",
+        "AGE": "年齢",
+        "TEL": "電話番号",
+        "MAIL_ADDRESS": "Eメール",
+        "REGION": "活動できる地域",
+        "ACTION": "活動できる内容",
+        "FREE_WRITE": "自由記入欄",
+        "": "",
+        "": "",
 
-        "POST_COMPLETE_DATE": "最新実施日時",
-        "ERROR_DATETIME": "エラー日時",
-        "ERROR_COMMENT": "エラー理由",
-
-        # 選択する
-        "CHOICE_COL": ["LINE友だちID", "LINE登録名"],
-        "LINE_FRIEND_ID": "LINE友だちID",
-        "LINE_NAME": "LINE登録名",
-        "SIGN_UP_DATE": "登録日",
-
-        "DRIVE_PARENTS_URL": "https://drive.google.com/drive/folders/17m3IFY35w-QWcwn39cM8BEAk7qWQwVts",
     }
 
 
